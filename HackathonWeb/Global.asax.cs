@@ -1,4 +1,7 @@
-﻿using System;
+﻿using FluentScheduler;
+using HackathonWeb.Models;
+using Microsoft.Win32;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
@@ -16,6 +19,10 @@ namespace HackathonWeb
             FilterConfig.RegisterGlobalFilters(GlobalFilters.Filters);
             RouteConfig.RegisterRoutes(RouteTable.Routes);
             BundleConfig.RegisterBundles(BundleTable.Bundles);
+
+            JobManager.Initialize(new MyPublicClass());
+            //PublicClass x = new Models.PublicClass();
+          //  x.GenerateInitData();
         }
     }
 }

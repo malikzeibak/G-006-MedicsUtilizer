@@ -1,61 +1,67 @@
-﻿<title>@ViewBag.Title</title>
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBWCBVvWmrJuRCEBowcwMXD3mbPGPhU-N0"
-        type="text/javascript"></script>    
-<meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+﻿@model HackathonWeb.Paramedic[]
 
-    <div id="googleMap" style="height:500px;width:100%;"></div>
-    <script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBWCBVvWmrJuRCEBowcwMXD3mbPGPhU-N0"
+        type="text/javascript"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+
+
+<h3 class="text-center">Supervisor Monitoring Dashboard</h3>
+<div class="bs-component text-center">
+    <span class="btn btn-info"  style="width:150px">Total: @Model.Count()</span>
+    <span class="btn btn-success">Available: @Model.Where(x=>x.Status== "Available").Count()</span>
+    <span class="btn btn-warning">Wait to confirm: @Model.Where(x => x.Status == "WaitToConfirm").Count()</span>
+    <span class="btn btn-danger">Busy: @Model.Where(x => x.Status == "Busy").Count()</span>
+    <span class="btn btn-outline-danger">Offline: @Model.Where(x => x.Status == "Offline").Count()</span>
+</div>
+
+<div id="googleMap" style="height:500px;width:100%;"></div>
+<script>
 
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(success);
         } else {
             alert("There is Some Problem on your current browser to get Geo Location!");
-        }
+    }
 
-        var myCenter;
-        function success(position) {
+    var myCenter;
+    function success(position) {
 
-            var markerArray = [];
+        var markerArray = [];
 
-            // Instantiate a directions service.
-            var directionsService = new google.maps.DirectionsService;
+        // Instantiate a directions service.
+        var directionsService = new google.maps.DirectionsService;
 
-             myCenter = new google.maps.LatLng(21.413128, 39.894158);
-            var mapProp = { center: myCenter, zoom: 12, scrollwheel: false, draggable: true, mapTypeId: google.maps.MapTypeId.ROADMAP };
-            var map = new google.maps.Map(document.getElementById("googleMap"), mapProp);
+        myCenter = new google.maps.LatLng(21.413128, 39.894158);
+        var mapProp = { center: myCenter, zoom: 13, scrollwheel: false, draggable: true, mapTypeId: google.maps.MapTypeId.ROADMAP };
+    var map = new google.maps.Map(document.getElementById("googleMap"), mapProp);
 
-            var lat = position.coords.latitude;
-            var long = position.coords.longitude;
+    var lat = position.coords.latitude;
+    var long = position.coords.longitude;
             var city = position.coords.locality;
-            var LatLng = new google.maps.LatLng(lat, long);
+    var LatLng = new google.maps.LatLng(lat, long);
             //var mapOptions = {
             //    center: LatLng,
             //    zoom: 12,
             //    mapTypeId: google.maps.MapTypeId.ROADMAP
             //};
 
-           // var map = new google.maps.Map(document.getElementById("googleMap"), mapOptions);
+            // var map = new google.maps.Map(document.getElementById("googleMap"), mapOptions);
 
-            var marker2 = new google.maps.Marker({ position: myCenter });
-            marker2.setMap(map);
+            @foreach(var x in Model.Select(x => x.LastGPS))
+            {
+                @:markerArray.push(new google.maps.Marker({ position: new google.maps.LatLng(@x.Split(',')[0], @x.Split(',')[1]) }));
+            }
 
-            var marker = new google.maps.Marker({
-                position: LatLng,
-                title: "<div style = 'height:60px;width:200px'><b>Your location:</b><br />Latitude: "
-                            + lat + +"<br />Longitude: " + long
-            });
+            for(i=0;i<100;i++)
+            {
+                markerArray[i].setMap(map);
 
-            markerArray[0]=marker2;
-            markerArray[1]=marker;
-
-            marker.setMap(map);
+            }
 
             var bounds = new google.maps.LatLngBounds();
-                bounds.extend(marker.getPosition());
                 bounds.extend(marker2.getPosition());
             map.fitBounds(bounds);
 
@@ -72,12 +78,11 @@
 
             var getInfoWindow = new google.maps.InfoWindow({
                 content: "<b>Your Location</b><br/> Latitude:" + lat + "<br /> Longitude:" + long + "" });
-            getInfoWindow.open(map, marker);
         }
 
         function calculateAndDisplayRoute(directionsDisplay, directionsService,
         markerArray, stepDisplay, map) {
-            
+
             // Retrieve the start and end locations and create a DirectionsRequest using
             // WALKING directions.
             directionsService.route({
@@ -108,14 +113,14 @@
             // For each step, place a marker, and add the text to the marker's infowindow.
             // Also attach the marker to an array so we can keep track of it and remove it
             // when calculating new routes.
-            var myRoute = directionResult.routes[0].legs[0];
-            for (var i = 0; i < myRoute.steps.length; i++) {
-                var marker = markerArray[i] = markerArray[i] || new google.maps.Marker;
+            //var myRoute = directionResult.routes[0].legs[0];
+            //for (var i = 0; i < myRoute.steps.length; i++) {
+              //  var marker = markerArray[i] = markerArray[i] || new google.maps.Marker;
                // marker.setMap(map);
-                marker.setPosition(myRoute.steps[i].start_location);
+             //   marker.setPosition(myRoute.steps[i].start_location);
                 //////attachInstructionText(
                 //////    stepDisplay, marker, myRoute.steps[i].instructions, map);
-            }
+           // }
         }
 
 </script>
